@@ -17,6 +17,9 @@ auth = tweepy.OAuthHandler("qc4ueP46blF2vrmSGRSMsR0e2", "8LduRX2G0kFVbVucmzSutvb
 auth.set_access_token("3268541017-Vtllj2Ono6NfyDrUixDKnhujgKnzjbux4b2V5cp", "77uymqu6rwVyuWnVJS8G2Tb8EommGPa3exeo6QgC5O9y7")
 api = tweepy.API(auth)
 
+businesses_per_user = {'jack':['TWTR', 'SQ'], 'satyanadella':['MSFT'], 'travisk':['UBER'], 'finkd':['FB'], 'elonmusk':['TSLA'], 'eldsjal':['SPOT'], 'levie':['BOX']}
+
+
 # Function to extract most popular tweets from a user (that were posted at least a week before the current date)
 @app.route('/api/tweets/<screen_name>', methods=['GET'])
 def get_tweets(screen_name):
@@ -52,15 +55,21 @@ def get_tweets(screen_name):
     return jsonify({'most_popular': most_popular})
  
 
+# Given a username from the businesses_per_user dict, computes the percent change in the stock of their business(es) for each of their tweets
+# Returns a list of this format: [[tweet ID, business, percent change], ...]
+@app.route('/api/stockchanges/<username>', methods=['GET'])
+def calculate_change_for_each_tweet(username):
+    most_popular = get_tweets(username)
+    businesses = businesses_per_user[username]
+    changes = []
+    for tweet in most_popular:
+        for business in businesses:
+            interval_prices = get_interval_prices(business, tweet[-1])
+            change = calculate_change(interval_prices)
+            changes.append([tweet[1], business, change])
+    return jsonify({'changes': changes})
 
-# Given a specific stock and a specific date, returns the closing prices from that date and a week later (not complete)
-@app.route('/api/stockprices/<ticker>/<start_date>', methods=['GET'])
-def get_interval_prices(ticker, start_date):
-    start_date = date.fromtimestamp(int(start_date))
-    formatted_start, formatted_end = format_start_and_end(start_date)
-    stock = yf.Ticker(ticker)
-    history = stock.history(start=formatted_start, end=formatted_end)
-    return jsonify({'history': history['Close']})
+
 
 
 # Given a datetime object, calculates date 7 days into the future and converts both dates into yfinance-friendly format
@@ -214,6 +223,20 @@ def date_in_bounds(date):
             return True
         else:
             return False
+
+# Given a specific stock and a specific date, returns the closing prices from that date and a week later (not complete)
+def get_interval_prices(ticker, start_date):
+    formatted_start, formatted_end = format_start_and_end(start_date)
+    stock = yf.Ticker(ticker)
+    history = stock.history(start=formatted_start, end=formatted_end)
+    return history['Close']
+
+
+def calculate_change(history):
+    first_price = history[0]
+    last_price = history[-1]
+    percent_change = ((last_price - first_price) / first_price)*100
+    return percent_change
 
 
 
