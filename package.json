@@ -17,7 +17,7 @@
     "twit": "^2.2.11"
   },
   "scripts": {
-    "start": "node manage.py",
+    "start": "node api.py",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
