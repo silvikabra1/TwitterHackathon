@@ -8,6 +8,8 @@ auth = tweepy.OAuthHandler(authentication.consumer_key, authentication.consumer_
 auth.set_access_token(authentication.access_token, authentication.access_token_secret)
 api = tweepy.API(auth)
 
+businesses_per_user = {'jack':['TWTR', 'SQ'], 'satyanadella':['MSFT'], 'travisk':['UBER'], 'finkd':['FB'], 'elonmusk':['TSLA'], 'eldsjal':['SPOT'], 'levie':['BOX']}
+
 
 # Given a datetime object, calculates date 7 days into the future and converts both dates into yfinance-friendly format
 # Note: One Day is subtracted from start date (and by extension end date) because the market might not have closed if it is the current date
@@ -54,7 +56,7 @@ def format_start_and_end(start_date):
                         formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-' + str(new_day)
                         return formatted_start, formatted_end
                 else:
-                    if (new_day) < 10:
+                    if new_day < 10:
                         formatted_end = formatted_start[0:5] + str(int(formatted_start[5:7]) + 1) + '-0' + str(new_day)
                         return formatted_start, formatted_end
                     else:
@@ -115,6 +117,13 @@ def get_interval_prices(ticker, start_date):
     stock = yf.Ticker(ticker)
     history = stock.history(start=formatted_start, end=formatted_end)
     return history['Close']
+
+
+def calculate_change(history):
+    first_price = history[0]
+    last_price = history[-1]
+    percent_change = ((last_price - first_price) / first_price)*100
+    return percent_change
 
 
 # Determines if a given year is a leap year
@@ -200,8 +209,21 @@ def get_tweets(username):
     return most_popular
 
 
-def calculate_change(history):
-    first_price = history[0]
-    last_price = history[-1]
-    percent_change = ((last_price - first_price) / first_price)*100
-    return percent_change
+# Given a username from the businesses_per_user dict, computes the percent change in the stock of their business(es) for each of their tweets
+# Returns a list of this format: [[tweet ID, business, percent change], ...]
+def calculate_change_for_each_tweet(username):
+    most_popular = get_tweets(username)
+    businesses = businesses_per_user[username]
+    changes = []
+    for tweet in most_popular:
+        for business in businesses:
+            interval_prices = get_interval_prices(business, tweet[-1])
+            change = calculate_change(interval_prices)
+            changes.append([tweet[1], business, change])
+    return changes
+
+
+if __name__ == '__main__':
+    #example usage
+    username = 'elonmusk'
+    print(calculate_change_for_each_tweet(username))
