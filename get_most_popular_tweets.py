@@ -8,7 +8,7 @@ auth = tweepy.OAuthHandler(authentication.consumer_key, authentication.consumer_
 auth.set_access_token(authentication.access_token, authentication.access_token_secret)
 api = tweepy.API(auth)
 
-businesses_per_user = {'jack':['TWTR', 'SQ'], 'satyanadella':['MSFT'], 'travisk':['UBER'], 'finkd':['FB'], 'elonmusk':['TSLA'], 'eldsjal':['SPOT'], 'levie':['BOX']}
+businesses_per_user = {'jack':['TWTR'], 'satyanadella':['MSFT'], 'travisk':['UBER'], 'finkd':['FB'], 'elonmusk':['TSLA'], 'eldsjal':['SPOT'], 'levie':['BOX']}
 
 
 # Given a datetime object, calculates date 7 days into the future and converts both dates into yfinance-friendly format

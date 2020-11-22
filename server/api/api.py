@@ -4,10 +4,7 @@ from flask_cors import CORS
 import tweepy
 import authentication
 import datetime
-from datetime import date
 import yfinance as yf
-import time
-
 
 app = flask.Flask(__name__)
 cors = CORS(app, resources=r'/api/*')
@@ -53,13 +50,46 @@ def get_tweets(screen_name):
                 continue
         counter += 1
     return jsonify({'most_popular': most_popular})
+
+
+def get_tweets_nonjson(screen_name):
+        username = str(screen_name)
+        num_tweets = 200
+        tweets = api.user_timeline(screen_name=username, count=num_tweets)
+        num_tweets = len(tweets)
+
+        most_popular_num = 20
+        print('The', most_popular_num, 'most popular tweets of the last', num_tweets, 'from @', username, 'posted at least a week ago:\n')
+        most_popular = []
+
+        counter = 0
+        while counter < num_tweets:
+            if tweets[counter].favorite_count == 0:
+                counter += 1
+                continue
+            if len(most_popular) > 20 and tweets[counter].favorite_count < most_popular[-1][0]:
+                counter += 1
+                continue
+            else:
+                date_posted = tweets[counter].created_at
+                if date_in_bounds(date_posted):
+                    tweet_info = [tweets[counter].favorite_count, tweets[counter].id, tweets[counter].text, tweets[counter].created_at]
+                    most_popular.append(tweet_info)
+                    most_popular.sort(reverse=True)
+                    if len(most_popular) > most_popular_num:
+                        most_popular.pop(-1)
+                else:
+                    counter += 1
+                    continue
+            counter += 1
+        return most_popular
  
 
 # Given a username from the businesses_per_user dict, computes the percent change in the stock of their business(es) for each of their tweets
 # Returns a list of this format: [[tweet ID, business, percent change], ...]
 @app.route('/api/stockchanges/<username>', methods=['GET'])
 def calculate_change_for_each_tweet(username):
-    most_popular = get_tweets(username)
+    most_popular = get_tweets_nonjson(username)
     businesses = businesses_per_user[username]
     changes = []
     for tweet in most_popular:
@@ -189,6 +219,23 @@ def is_a_leap_year(year):
         return False
 
 
+
+
+# Given a specific stock and a specific date, returns the closing prices from that date and a week later (not complete)
+def get_interval_prices(ticker, start_date):
+    formatted_start, formatted_end = format_start_and_end(start_date)
+    stock = yf.Ticker(ticker)
+    history = stock.history(start=formatted_start, end=formatted_end)
+    return history['Close']
+
+
+def calculate_change(history):
+    first_price = history[0]
+    last_price = history[-1]
+    percent_change = ((last_price - first_price) / first_price)*100
+    return percent_change
+
+
 # Determines if a given date is at least a week before the current day
 def date_in_bounds(date):
     today = datetime.date.today()
@@ -223,22 +270,6 @@ def date_in_bounds(date):
             return True
         else:
             return False
-
-# Given a specific stock and a specific date, returns the closing prices from that date and a week later (not complete)
-def get_interval_prices(ticker, start_date):
-    formatted_start, formatted_end = format_start_and_end(start_date)
-    stock = yf.Ticker(ticker)
-    history = stock.history(start=formatted_start, end=formatted_end)
-    return history['Close']
-
-
-def calculate_change(history):
-    first_price = history[0]
-    last_price = history[-1]
-    percent_change = ((last_price - first_price) / first_price)*100
-    return percent_change
-
-
 
 
 app.run();
