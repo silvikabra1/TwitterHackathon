@@ -9,21 +9,112 @@ auth.set_access_token(authentication.access_token, authentication.access_token_s
 api = tweepy.API(auth)
 
 
+# Given a datetime object, calculates date 7 days into the future and converts both dates into yfinance-friendly format
+# Note: One Day is subtracted from start date (and by extension end date) because the market might not have closed if it is the current date
+def format_start_and_end(start_date):
+    days_in_the_month = {'01': 31, '03': 31, '04': 30, '05': 31, '06': 30, '07': 31, '08': 31, '09': 30, '10': 31, '11': 30, '12': 31}
+    if start_date.day - 1 == 0:
+        new_month = start_date.month - 1
+        if new_month == 0:
+            new_year = start_date.year - 1
+            formatted_start = str(new_year) + '-12-31'
+        else:
+            if new_month < 10:
+                if new_month == 2:
+                    if is_a_leap_year(start_date.year):
+                        new_day = 29
+                    else:
+                        new_day = 28
+                formatted_start = str(start_date.year) + '-0' + str(new_month) + '-' + str(new_day)
+            else:
+                new_day = days_in_the_month[str(new_month)]
+                formatted_start = str(start_date.year) + '-' + str(new_month) + '-' + str(new_day)
+    else:
+        if start_date.day - 1 < 10:
+            if start_date.month < 10:
+                formatted_start = str(start_date.year) + '-0' + str(start_date.month) + '-0' + str(start_date.day - 1)
+            else:
+                formatted_start = str(start_date.year) + '-' + str(start_date.month) + '-0' + str(start_date.day - 1)
+        else:
+            if start_date.month < 10:
+                formatted_start = str(start_date.year) + '-0' + str(start_date.month) + '-' + str(start_date.day - 1)
+            else:
+                formatted_start = str(start_date.year) + '-' + str(start_date.month) + '-' + str(start_date.day - 1)
+
+    end_day = int(formatted_start[-2:]) + 7
+    if formatted_start[5:7] == '02':
+        if is_a_leap_year(formatted_start[0:4]):
+            if end_day > 29:
+                new_day = (7 - (29 - int(formatted_start[-2:])))
+                if int(formatted_start[5:7]) + 1 > 12:
+                    if new_day < 10:
+                        formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-0' + str(new_day)
+                        return formatted_start, formatted_end
+                    else:
+                        formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-' + str(new_day)
+                        return formatted_start, formatted_end
+                else:
+                    if (new_day) < 10:
+                        formatted_end = formatted_start[0:5] + str(int(formatted_start[5:7]) + 1) + '-0' + str(new_day)
+                        return formatted_start, formatted_end
+                    else:
+                        formatted_end = formatted_start[0:5] + str(int(formatted_start[5:7]) + 1) + '-' + str(new_day)
+                        return formatted_start, formatted_end
+            else:
+                if end_day < 10:
+                    formatted_end = formatted_start[0:8] + '0' + str(end_day)
+                    return formatted_start, formatted_end
+                else:
+                    formatted_end = formatted_start[0:8] + str(end_day)
+                    return formatted_start, formatted_end
+        else:
+            if end_day > 28:
+                new_day = (7 - (28 - int(formatted_start[-2:])))
+                if int(formatted_start[5:7]) + 1 > 12:
+                    if new_day < 10:
+                        formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-0' + str(new_day)
+                        return formatted_start, formatted_end
+                    else:
+                        formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-' + str(new_day)
+                        return formatted_start, formatted_end
+                else:
+                    formatted_end = formatted_start[0:5] + str(int(formatted_start[5:7]) + 1) + '-' + str(new_day)
+                    return formatted_start, formatted_end
+            else:
+                formatted_end = formatted_start[0:8] + str(end_day)
+                return formatted_start, formatted_end
+    else:
+        if end_day > days_in_the_month[formatted_start[5:7]]:
+            new_day = (7 - (days_in_the_month[formatted_start[5:7]] - int(formatted_start[-2:])))
+            if int(formatted_start[5:7]) + 1 > 12:
+                if new_day < 10:
+                    formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-0' + str(new_day)
+                    return formatted_start, formatted_end
+                else:
+                    formatted_end = str(int(formatted_start[0:4]) + 1) + '-01-' + str(new_day)
+                    return formatted_start, formatted_end
+            else:
+                if new_day < 10:
+                    formatted_end = formatted_start[0:5] + str(int(formatted_start[5:7]) + 1) + '-0' + str(new_day)
+                    return formatted_start, formatted_end
+                else:
+                    formatted_end = formatted_start[0:5] + str(int(formatted_start[5:7]) + 1) + '-' + str(new_day)
+                    return formatted_start, formatted_end
+        else:
+            if end_day < 10:
+                formatted_end = formatted_start[0:8] + '0' + str(end_day)
+                return formatted_start, formatted_end
+            else:
+                formatted_end = formatted_start[0:8] + str(end_day)
+                return formatted_start, formatted_end
+
+
 # Given a specific stock and a specific date, returns the closing prices from that date and a week later (not complete)
 def get_interval_prices(ticker, start_date):
+    formatted_start, formatted_end = format_start_and_end(start_date)
     stock = yf.Ticker(ticker)
-    history = stock.history(period='max')
-    print(history)
-    formatted_start =''
-    formatted_start.append(str(start_date.year) + '-')
-    if start_date.month < 10:
-        formatted_start.append('0' + str(start_date.month) + '-')
-    else:
-        formatted_start.append(str(start_date.month) + '-')
-    if start_date.day < 10:
-        formatted_start.append('0' + str(start_date.day))
-    else:
-        formatted_start.append(str(start_date.day))
+    history = stock.history(start=formatted_start, end=formatted_end)
+    return history['Close']
 
 
 # Determines if a given year is a leap year
@@ -109,8 +200,8 @@ def get_tweets(username):
     return most_popular
 
 
-if __name__ == '__main__':
-    # example usage:
-    most_popular = get_tweets('elonmusk')
-    for tweet in most_popular:
-        print(tweet)
+def calculate_change(history):
+    first_price = history[0]
+    last_price = history[-1]
+    percent_change = ((last_price - first_price) / first_price)*100
+    return percent_change
