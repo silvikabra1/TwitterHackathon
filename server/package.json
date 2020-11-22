@@ -1,0 +1,19 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon --exec babel-node index.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@babel/node": "^7.12.6",
+    "jest": "^26.6.3",
+    "@babel/cli": "^7.12.1",
+    "@babel/core": "^7.12.3",
+    "@babel/preset-env": "^7.12.1",
+    "nodemon": "^2.0.6",
+    "rimraf": "^3.0.2"
+  }
+}
