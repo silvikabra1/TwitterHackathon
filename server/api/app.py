@@ -272,4 +272,6 @@ def date_in_bounds(date):
             return False
 
 
-app.run();
+if __name__ == '__main__':
+    app.run()
+
