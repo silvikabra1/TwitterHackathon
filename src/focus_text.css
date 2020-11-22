@@ -18,25 +18,25 @@
   box-sizing: border-box;
 }
 body {
-  padding: 0;
-  margin: 10% auto;
+  padding: 10%;
+  background:#000000;
+  width: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  background:#000000;
   font-family: Helvetica Neue, Helvetica, Arial, sans-serif;
 }
-.focus {
+ .focus {
   font-size: 5rem;
   text-transform: uppercase;
   color: #1DA1F2;
   letter-spacing: 0.2rem;
   line-height: 1;
   position: relative;
-  left: 15%;
+  left: 17%;
   width: 280px;
 }
-.focus:before {
+ .focus:before {
   content: 'matter';
   filter: blur(3px);
 }

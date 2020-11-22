@@ -4,12 +4,12 @@ import '../focus_text.css';
 const FocusText = ({ content }) => {
   return (
       <div>
-        <div class="pretext">
+        <div className="pretext">
           Make what you say
         </div> <br/>
-        <div class="focus">
-          <div class="focus--mask">
-            <div class="focus--mask-inner">{content}</div>
+        <div className="focus">
+          <div className="focus--mask">
+            <div className="focus--mask-inner">{content}</div>
         </div>
       </div>
     </div>
